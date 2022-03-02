@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class CustomAccountManager(BaseUserManager):
@@ -33,6 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=100)
     email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
+    is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -52,7 +54,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     first_name = models.CharField(max_length=50, unique=False)
     last_name = models.CharField(max_length=50, unique=False)
-    phone_number = models.CharField(max_length=10, unique=True, null=False, blank=False)
+    phone_number = PhoneNumberField(unique=True)
     age = models.PositiveIntegerField(null=False, blank=False)
 
     class Meta:

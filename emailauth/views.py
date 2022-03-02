@@ -24,7 +24,7 @@ class UserRegistrationView(CreateAPIView):
         absurl = 'http://'+ current_site + relativeLink + user_uuid 
         email_body = 'Hi user use link below to verify your email \n' + absurl 
         data = {'email_subject':'Verify Your Email', 'email_body': email_body, 'to_email': user.email}
-        Util.send_email(data)
+        # Util.send_email(data)
         return Response(user_data, status=status.HTTP_201_CREATED)
 
 
@@ -45,19 +45,25 @@ class UserLoginView(RetrieveAPIView):
     serializer_class = UserLoginSerializer    
 
     def post(self, request):
+        obj = User.objects.get(email=request.data['email'])
+        
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
-        obj = User.objects.get(email=request.data['email'])
-        user_serializer = UserSerializer(obj.profile)
-        return Response({
-            'success' : 'True',
-            'status code' : status.HTTP_200_OK,
-            'message': 'User logged in  successfully',
-            "data": user_serializer.data,
-             'token' : serializer.data['token'],
-            }, 
-            status=status.HTTP_200_OK)
+        if obj.is_verified:
+            user_serializer = UserSerializer(obj.profile)
+            return Response({
+                'success' : 'True',
+                'status code' : status.HTTP_200_OK,
+                'message': 'User logged in  successfully',
+                "data": user_serializer.data,
+                'token' : serializer.data['token'],
+                }, 
+                status=status.HTTP_200_OK)
+        else:
+            content = {'detail': ('User account not active.')}
+            return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+       
+
 
 class ForgotPassView(generics.GenericAPIView):
     def post(self, request):
